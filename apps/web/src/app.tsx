@@ -1,31 +1,39 @@
+import { createRouter, RouterProvider } from "@tanstack/react-router"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { routeTree } from "./routeTree.gen"
+import { useState } from "react"
+import { ThemeProvider } from "./components/theme-provider"
 import "./index.css"
-import { Button } from "@/components/ui/button"
-import { client } from "./lib/client"
+
+const router = createRouter({ routeTree })
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router
+  }
+}
 
 export function App() {
-  async function getHealthCheck() {
-    const { data, error } = await client.api.v1["health-check"].get()
-
-    if (error) throw error
-
-    console.log("MESSAGE", data.message)
-  }
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 1000 * 60 * 5,
+            retry: 1,
+          },
+        },
+      })
+  )
 
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2" onClick={getHealthCheck}>
-            Button
-          </Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </ThemeProvider>
   )
 }
