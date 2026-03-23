@@ -1,0 +1,24 @@
+{
+  "extends": "@repo/tsconfig/bun.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@backend/*": [
+        "./src/*"
+      ]
+    },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "composite": true
+  },
+  "include": [
+    "src/**/*",
+    "generate-module.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
