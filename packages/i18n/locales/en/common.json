@@ -1,0 +1,11 @@
+{
+  "errors": {
+    "not_found": "Resource not found",
+    "unauthorized": "Unauthorized",
+    "validation": "Validation error: {{field}}"
+  },
+  "auth": {
+    "login_success": "Logged in successfully",
+    "logout_success": "Logged out"
+  }
+}

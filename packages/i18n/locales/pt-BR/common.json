@@ -1,0 +1,11 @@
+{
+  "errors": {
+    "not_found": "Recurso não encontrado",
+    "unauthorized": "Não autorizado",
+    "validation": "Erro de validação: {{field}}"
+  },
+  "auth": {
+    "login_success": "Login realizado com sucesso",
+    "logout_success": "Logout realizado"
+  }
+}

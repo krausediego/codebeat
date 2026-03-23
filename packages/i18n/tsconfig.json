@@ -1,0 +1,12 @@
+{
+  "extends": "@repo/tsconfig/base.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ESNext"
+  },
+  "include": [
+    "./**/*"
+  ]
+}

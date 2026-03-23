@@ -1,0 +1,14 @@
+{
+  "extends": "@repo/tsconfig/base.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "vite.config.ts"
+  ]
+}

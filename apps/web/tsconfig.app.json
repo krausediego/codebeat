@@ -1,0 +1,25 @@
+{
+  "extends": "@repo/tsconfig/react.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@backend/*": [
+        "../api/src/*"
+      ]
+    },
+  },
+  "references": [
+    {
+      "path": "../api"
+    }
+  ],
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
