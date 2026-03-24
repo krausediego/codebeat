@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: marquei-api
+    environment:
+      POSTGRES_DB: codebeat
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:alpine
+    container_name: redis-local
+    restart: always
+    ports:
+      - "6379:6379"

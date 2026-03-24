@@ -3,8 +3,9 @@ import path from "node:path";
 import openapi from "@elysiajs/openapi";
 import cors from "@elysiajs/cors";
 import Elysia from "elysia";
-import { envApp, ILoggingManager, makeLogging } from "@/infra";
+import { auth, envApp, ILoggingManager, makeLogging } from "@/infra";
 import { loggerPlugin } from "@/routes/plugins";
+import { OpenAPI } from "@/routes/plugins";
 
 export class App {
   private app: Elysia;
@@ -17,7 +18,10 @@ export class App {
     console.log(envApp.WEB_BASE_URL);
     this.app.use(
       openapi({
-        documentation: {},
+        documentation: {
+          components: await OpenAPI.components,
+          paths: await OpenAPI.getPaths(),
+        },
       })
     );
     this.app.use(
@@ -29,6 +33,7 @@ export class App {
       })
     );
     this.app.use(loggerPlugin);
+    this.app.mount(auth.handler);
     return this;
   }
 
