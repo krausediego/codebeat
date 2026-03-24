@@ -3,3 +3,4 @@ export * from "./logging";
 export * from "./http";
 export * from "./database";
 export * from "./auth";
+export * from "./cache";
