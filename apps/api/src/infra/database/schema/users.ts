@@ -8,6 +8,7 @@ export const users = pgTable("users", {
     .primaryKey()
     .$defaultFn(() => randomUUIDv7()),
   name: text("name").notNull(),
+  username: text("username"),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),

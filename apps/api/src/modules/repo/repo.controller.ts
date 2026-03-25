@@ -11,6 +11,7 @@ export class RepoController implements IController {
     try {
       const content = await this.listReposService().run({
         userId: locals.user.id,
+        token: locals.account.accessToken,
         traceId: locals?.traceId,
       });
 

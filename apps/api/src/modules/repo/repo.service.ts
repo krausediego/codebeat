@@ -12,24 +12,15 @@ export class RepoService extends BaseService implements IRepo {
   }
 
   @setTraceId
-  async run({ userId }: Repo.Params): Promise<Repo.Response> {
+  async run({ userId, token }: Repo.Params): Promise<Repo.Response> {
     this.log("info", "Starting process list-repos");
-
-    const account = await db.query.accounts.findFirst({
-      where(fields, { eq }) {
-        return eq(fields.userId, userId);
-      },
-    });
-
-    if (!account) {
-      throw new BadRequestError("Error!!!");
-    }
 
     const repos = await this.github.fetch({
       userId,
-      token: account.accessToken!,
+      token,
       endpoint: "users/repos",
       args: [{}],
+      traceId: this.traceId,
     });
 
     return repos;

@@ -1,4 +1,4 @@
-import { auth } from "@/infra";
+import { auth, db } from "@/infra";
 import Elysia from "elysia";
 
 export const betterAuthPlugin = new Elysia({ name: "better-auth" })
@@ -10,7 +10,16 @@ export const betterAuthPlugin = new Elysia({ name: "better-auth" })
 
         if (!session) return status(401, { message: "Unauthorized" });
 
-        return session;
+        const account = await db.query.accounts.findFirst({
+          where(fields, { eq }) {
+            return eq(fields.userId, session.user.id);
+          },
+        });
+
+        return {
+          ...session,
+          account,
+        };
       },
     },
   });

@@ -3,6 +3,9 @@ import { envApp, envAuth } from "../config";
 import { openAPI } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../database";
+import { Octokit } from "@octokit/rest";
+import * as schema from "@/infra/database/schema";
+import { eq } from "drizzle-orm";
 
 export const auth = betterAuth({
   basePath: "/api/v1/auth",
@@ -31,6 +34,29 @@ export const auth = betterAuth({
       clientId: envAuth.GITHUB_CLIENT_ID,
       clientSecret: envAuth.GITHUB_CLIENT_SECRET,
       scope: ["read:user", "user:email", "repo", "read:org"],
+    },
+  },
+  user: {
+    additionalFields: {
+      username: { type: "string", required: true },
+    },
+  },
+  databaseHooks: {
+    account: {
+      create: {
+        after: async (account) => {
+          if (account.providerId !== "github") return;
+          if (!account.accessToken) return;
+
+          const octokit = new Octokit({ auth: account.accessToken });
+          const { data } = await octokit.rest.users.getAuthenticated();
+
+          await db
+            .update(schema.users)
+            .set({ username: data.login })
+            .where(eq(schema.users.id, account.userId));
+        },
+      },
     },
   },
 });

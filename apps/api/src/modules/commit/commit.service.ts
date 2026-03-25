@@ -1,0 +1,131 @@
+import { setTraceId } from "@/helpers";
+import type { ILoggingManager } from "@/infra";
+import { BaseService, IGithub } from "@/modules/shared";
+import type { Commit, ICommit } from ".";
+
+export class CommitService extends BaseService implements ICommit {
+  constructor(
+    protected readonly logger: ILoggingManager,
+    private readonly github: IGithub,
+  ) {
+    super(logger);
+  }
+
+  @setTraceId
+  async run({
+    userId,
+    username,
+    token,
+  }: Commit.Params): Promise<Commit.Response> {
+    this.log("info", "Starting process commit", { username });
+
+    const now = new Date();
+    const oneYearAgo = new Date(now);
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    const query = `
+      query($username: String!, $from: DateTime!, $to: DateTime!) {
+        user(login: $username) {
+          contributionsCollection(from: $from, to: $to) {
+            contributionCalendar {
+              weeks {
+                contributionDays {
+                  date
+                  contributionCount
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const data = await this.github.graphql<Commit.ContributionsResponse>(
+      userId,
+      token,
+      query,
+      {
+        username,
+        from: oneYearAgo.toISOString(),
+        to: now.toISOString(),
+      },
+    );
+
+    const days =
+      data.user.contributionsCollection.contributionCalendar.weeks.flatMap(
+        (w) => w.contributionDays,
+      );
+
+    const commitsByDay = new Map(
+      days.map((d) => [d.date, d.contributionCount]),
+    );
+
+    const heatmap = days.map((d) => ({
+      date: d.date,
+      count: d.contributionCount,
+    }));
+
+    const { currentStreak, longestStreak } = this.calculateStreaks({
+      commitsByDay,
+    });
+
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const firstDayOfYear = new Date(now.getFullYear(), 0, 1)
+      .toISOString()
+      .split("T")[0];
+
+    const commits30d = heatmap
+      .filter((d) => d.date >= thirtyDaysAgo.toISOString().split("T")[0])
+      .reduce((sum, d) => sum + d.count, 0);
+
+    const totalThisYear = heatmap
+      .filter((d) => d.date >= firstDayOfYear)
+      .reduce((sum, d) => sum + d.count, 0);
+
+    return { commits30d, totalThisYear, currentStreak, longestStreak, heatmap };
+  }
+
+  private calculateStreaks({
+    commitsByDay,
+  }: {
+    commitsByDay: Map<string, number>;
+  }) {
+    const today = new Date();
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 0;
+
+    const todayStr = today.toISOString().split("T")[0];
+    const startOffset = commitsByDay.has(todayStr) ? 0 : 1;
+
+    // streak atual — de hoje pra trás, para no primeiro dia sem commit
+    for (let i = startOffset; i < 365; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+
+      if ((commitsByDay.get(dateStr) ?? 0) > 0) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+
+    // longest streak — itera todos os 365 dias em ordem, não só os com commits
+    for (let i = 364; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+
+      if ((commitsByDay.get(dateStr) ?? 0) > 0) {
+        tempStreak++;
+        longestStreak = Math.max(longestStreak, tempStreak);
+      } else {
+        tempStreak = 0; // quebra o streak em dias sem commit
+      }
+    }
+
+    return { currentStreak, longestStreak };
+  }
+}

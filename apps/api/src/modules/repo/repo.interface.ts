@@ -7,6 +7,7 @@ export interface IRepo {
 export namespace Repo {
   export type Params = {
     userId: string;
+    token: string;
     traceId: string;
   };
 

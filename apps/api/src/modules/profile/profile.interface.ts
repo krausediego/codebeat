@@ -5,7 +5,9 @@ export interface IProfile {
 }
 
 export namespace Profile {
-  export type Params = ProfileSchema.GetParams & {
+  export type Params = {
+    userId: string;
+    token: string;
     traceId: string;
   };
 

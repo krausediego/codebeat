@@ -8,9 +8,42 @@ import { ICacheManager } from "@/infra/cache";
 export class GithubService extends BaseService implements IGithub {
   constructor(
     protected readonly logger: ILoggingManager,
-    private readonly cache: ICacheManager
+    private readonly cache: ICacheManager,
   ) {
     super(logger);
+  }
+
+  async graphql<T>(
+    userId: string,
+    token: string,
+    query: string,
+    variables?: Record<string, unknown>,
+  ): Promise<T> {
+    const key = this.cacheKey({
+      userId,
+      endpoint: "graphql",
+      params: variables,
+    });
+    const ttl = 60 * 60; // 1h
+
+    const cached = await this.cache.get(key, this.traceId);
+    if (cached) {
+      this.log("info", "Cache hit: graphql", { userId });
+      return cached as T;
+    }
+
+    this.log("info", "GraphQL fetch", { userId, variables });
+
+    const octokit = this.octokit({ token });
+    const data = await octokit.graphql<T>(query, {
+      ...variables,
+      headers: { authorization: `token ${token}` },
+    });
+
+    await this.cache.setEx(key, JSON.stringify(data), ttl, this.traceId);
+    this.log("info", "GraphQL cached", { userId, ttl });
+
+    return data;
   }
 
   async fetch<T extends Github.GithubEndpoint>({
@@ -19,7 +52,7 @@ export class GithubService extends BaseService implements IGithub {
     endpoint,
     args,
   }: Github.FetchParams<T>): Promise<Github.FetchResponse<T>> {
-    const params = args[0];
+    const params = args?.[0];
     const key = this.cacheKey({ userId, endpoint, params });
     const { ttl, fetch } = githubEndpoints[endpoint];
 

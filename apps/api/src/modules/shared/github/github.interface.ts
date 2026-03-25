@@ -5,6 +5,12 @@ export interface IGithub {
   fetch<T extends Github.GithubEndpoint>(
     params: Github.FetchParams<T>,
   ): Promise<Github.FetchResponse<T>>;
+  graphql<T>(
+    userId: string,
+    token: string,
+    query: string,
+    variables?: Record<string, unknown>,
+  ): Promise<T>;
   invalidate(params: Github.InvalidateParams): Promise<void>;
 }
 

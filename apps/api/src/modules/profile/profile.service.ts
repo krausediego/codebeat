@@ -1,18 +1,28 @@
 import { setTraceId } from "@/helpers";
 import type { ILoggingManager } from "@/infra";
-import { BaseService } from "@/modules/shared";
+import { BaseService, IGithub } from "@/modules/shared";
 import type { Profile, IProfile } from ".";
-import * as schema from "@/infra/database/schema";
 
 export class ProfileService extends BaseService implements IProfile {
-  constructor(protected readonly logger: ILoggingManager) {
+  constructor(
+    protected readonly logger: ILoggingManager,
+    private readonly github: IGithub,
+  ) {
     super(logger);
   }
 
   @setTraceId
-  async run(params: Profile.Params): Promise<Profile.Response> {
+  async run({ userId, token }: Profile.Params): Promise<Profile.Response> {
     this.log("info", "Starting process profile");
 
-    return {};
+    const profile = await this.github.fetch({
+      userId,
+      token,
+      endpoint: "users/authenticated",
+      args: [{}],
+      traceId: this.traceId,
+    });
+
+    return profile;
   }
 }

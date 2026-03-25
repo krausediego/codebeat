@@ -1,17 +1,20 @@
 import z from "zod";
 import { defineSchema } from "@/infra";
+import { RestEndpointMethodTypes } from "@octokit/rest";
+
+type GithubProfile =
+  RestEndpointMethodTypes["users"]["getAuthenticated"]["response"]["data"];
 
 export const profileSchema = defineSchema({
   response: {
-    200: z.object({}),
+    200: z.custom<GithubProfile>(),
   },
   detail: {
-    tags: [""],
-    summary: "",
+    tags: ["Profile"],
+    summary: "Get profile",
   },
 });
 
 export namespace ProfileSchema {
-  export type GetParams = z.infer<typeof profileSchema.body>;
   export type GetResponse = z.infer<(typeof profileSchema.response)[200]>;
 }

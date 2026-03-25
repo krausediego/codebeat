@@ -2,7 +2,6 @@ import type { IController } from "@/modules/shared";
 
 export const adaptRoute = (controller: IController) =>
   (async (ctx: any) => {
-    console.log("aqui");
     const data = {
       ...((ctx.body as object) ?? {}),
       ...((ctx.params as object) ?? {}),
@@ -15,6 +14,7 @@ export const adaptRoute = (controller: IController) =>
       path: ctx.path,
       locals: {
         user: ctx.user,
+        account: ctx.account,
         traceId: ctx.traceId,
         headers: ctx.headers,
       },
