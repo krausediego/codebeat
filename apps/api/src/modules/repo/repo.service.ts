@@ -29,6 +29,7 @@ export class RepoService extends BaseService implements IRepo {
       userId,
       token: account.accessToken!,
       endpoint: "users/repos",
+      args: [{}],
     });
 
     return repos;
