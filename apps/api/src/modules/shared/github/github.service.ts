@@ -4,6 +4,7 @@ import { Github, IGithub } from "./github.interface";
 import { Octokit } from "@octokit/rest";
 import { githubEndpoints } from "./github.endpoints";
 import { ICacheManager } from "@/infra/cache";
+import { setTraceId } from "@/helpers";
 
 export class GithubService extends BaseService implements IGithub {
   constructor(

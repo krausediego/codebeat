@@ -17,22 +17,27 @@ export const githubEndpoints = {
     ) =>
       octokit.rest.repos.listForAuthenticatedUser({ per_page: 100, ...params }),
   },
-  "search/commits": {
-    ttl: 60 * 60,
+  "repos/languages": {
+    ttl: 60 * 60 * 6, // 6h
     fetch: (
       octokit: Github.OctokitInstance,
-      params: RestEndpointMethodTypes["search"]["commits"]["parameters"],
+      params: RestEndpointMethodTypes["repos"]["listLanguages"]["parameters"],
     ) =>
-      octokit.rest.search.commits({
+      octokit.rest.repos.listLanguages({
         ...params,
-        q: params.q,
+      }),
+  },
+  "search/pull-requests": {
+    ttl: 60 * 60 * 2, // 2h
+    fetch: (
+      octokit: Github.OctokitInstance,
+      params: RestEndpointMethodTypes["search"]["issuesAndPullRequests"]["parameters"],
+    ) =>
+      octokit.rest.search.issuesAndPullRequests({
+        ...params,
         per_page: 100,
-        sort: "author-date",
+        sort: "created",
         order: "desc",
-        page: params.page ?? 1,
-        headers: {
-          Accept: "application/vnd.github.cloak-preview+json",
-        },
       }),
   },
 };

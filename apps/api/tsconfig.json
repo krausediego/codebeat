@@ -12,6 +12,7 @@
     },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "isolatedModules": true,
     "composite": true
   },
   "include": [
