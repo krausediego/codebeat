@@ -11,6 +11,11 @@ export const pullRequestSchema = defineSchema({
       closed: z.number(),
       avgMergeTimeHours: z.number().nullable(),
       last12Months: z.custom<PullRequest.MonthlyCount[]>(),
+      issues: z.object({
+        total: z.number(),
+        open: z.number(),
+        closed: z.number(),
+      }),
     }),
   },
   detail: {

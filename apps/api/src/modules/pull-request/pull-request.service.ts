@@ -2,7 +2,6 @@ import { setTraceId } from "@/helpers";
 import type { ILoggingManager } from "@/infra";
 import { BaseService, IGithub } from "@/modules/shared";
 import type { PullRequest, IPullRequest } from ".";
-import * as schema from "@/infra/database/schema";
 
 export class PullRequestService extends BaseService implements IPullRequest {
   constructor(
@@ -20,93 +19,161 @@ export class PullRequestService extends BaseService implements IPullRequest {
   }: PullRequest.Params): Promise<PullRequest.Response> {
     this.log("info", "Starting process pull-requests", { username });
 
-    const [opened, merged, closed] = await Promise.all([
-      this.fetchPRs({
-        userId,
-        token,
-        username,
-        filter: "author",
-        state: "open",
-      }),
-      this.fetchPRs({
-        userId,
-        token,
-        username,
-        filter: "author",
-        state: "merged",
-      }),
-      this.fetchPRs({
-        userId,
-        token,
-        username,
-        filter: "author",
-        state: "closed",
-      }),
-    ]);
+    const now = new Date();
+    const oneYearAgo = new Date(now);
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-    this.log("info", "PRs fetched", {
-      open: opened.length,
-      merged: merged.length,
-      closed: closed.length,
-    });
-
-    const avgMergeTimeHours = this.calculateAvgMergeTime(merged);
-    const last12Months = this.buildMonthlyStats([
-      ...opened,
-      ...merged,
-      ...closed,
-    ]);
-
-    return {
-      total: opened.length + merged.length + closed.length,
-      open: opened.length,
-      merged: merged.length,
-      closed: closed.length,
-      avgMergeTimeHours,
-      last12Months,
+    type PRContributionsResponse = {
+      user: {
+        contributionsCollection: {
+          pullRequestContributions: {
+            totalCount: number;
+            nodes: {
+              pullRequest: {
+                title: string;
+                state: string;
+                createdAt: string;
+                mergedAt: string | null;
+                closedAt: string | null;
+                repository: { nameWithOwner: string };
+              };
+            }[];
+          };
+          issueContributions: {
+            totalCount: number;
+            nodes: {
+              issue: {
+                state: string;
+                createdAt: string;
+                closedAt: string | null;
+              };
+            }[];
+          };
+        };
+      };
     };
-  }
 
-  private async fetchPRs({
-    userId,
-    token,
-    username,
-    state,
-  }: {
-    userId: string;
-    token: string;
-    username: string;
-    filter: string;
-    state: "open" | "merged" | "closed";
-  }): Promise<PullRequest.PRItem[]> {
-    const stateQuery = state === "merged" ? "is:merged" : `is:${state}`;
-    const q = `author:${username} type:pr ${stateQuery}`;
+    const query = `
+      query($username: String!, $from: DateTime!, $to: DateTime!) {
+        user(login: $username) {
+          contributionsCollection(from: $from, to: $to) {
+            pullRequestContributions(first: 100) {
+              totalCount
+              nodes {
+                pullRequest {
+                  title
+                  state
+                  createdAt
+                  mergedAt
+                  closedAt
+                  repository { nameWithOwner }
+                }
+              }
+            }
+            issueContributions(first: 100) {
+              totalCount
+              nodes {
+                issue {
+                  state
+                  createdAt
+                  closedAt
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
 
-    const pages = await Promise.all(
-      [1, 2].map((page) =>
+    // busca GraphQL e Search API em paralelo
+    const [graphqlData, searchOpen, searchMerged, searchClosed] =
+      await Promise.all([
+        this.github.graphql<PRContributionsResponse>(userId, token, query, {
+          username,
+          from: oneYearAgo.toISOString(),
+          to: now.toISOString(),
+        }),
         this.github.fetch({
           userId,
           token,
           endpoint: "search/pull-requests",
-          args: [{ q, page }],
+          args: [{ q: `author:${username} type:pr is:open`, page: 1 }],
         }),
-      ),
+        this.github.fetch({
+          userId,
+          token,
+          endpoint: "search/pull-requests",
+          args: [{ q: `author:${username} type:pr is:merged`, page: 1 }],
+        }),
+        this.github.fetch({
+          userId,
+          token,
+          endpoint: "search/pull-requests",
+          args: [{ q: `author:${username} type:pr is:closed`, page: 1 }],
+        }),
+      ]);
+
+    // GraphQL traz nodes com detalhes
+    const prs =
+      graphqlData.user.contributionsCollection.pullRequestContributions.nodes.map(
+        (n) => ({
+          title: n.pullRequest.title,
+          state: n.pullRequest.state,
+          createdAt: n.pullRequest.createdAt,
+          mergedAt: n.pullRequest.mergedAt,
+          closedAt: n.pullRequest.closedAt,
+          repo: n.pullRequest.repository.nameWithOwner,
+        }),
+      );
+
+    const issueNodes =
+      graphqlData.user.contributionsCollection.issueContributions.nodes;
+
+    // Search API traz totalCount mais preciso (inclui repos públicos que o GraphQL pode não ver)
+    const open = Math.max(
+      prs.filter((p) => p.state === "OPEN").length,
+      searchOpen.total_count,
+    );
+    const merged = Math.max(
+      prs.filter((p) => p.state === "MERGED").length,
+      searchMerged.total_count,
+    );
+    const closed = Math.max(
+      prs.filter((p) => p.state === "CLOSED").length,
+      searchClosed.total_count,
     );
 
-    return pages.flatMap((p) =>
-      p.items.map((item) => ({
-        title: item.title,
-        state: item.state,
-        createdAt: item.created_at,
-        mergedAt: (item as any).pull_request?.merged_at ?? null,
-        closedAt: item.closed_at ?? null,
-        repo: item.repository_url.split("/").slice(-2).join("/"),
-      })),
-    );
+    this.log("info", "PRs fetched", {
+      graphqlTotal:
+        graphqlData.user.contributionsCollection.pullRequestContributions
+          .totalCount,
+      searchOpen: searchOpen.total_count,
+      searchMerged: searchMerged.total_count,
+      searchClosed: searchClosed.total_count,
+      finalOpen: open,
+      finalMerged: merged,
+      finalClosed: closed,
+    });
+
+    return {
+      total: open + merged + closed,
+      open,
+      merged,
+      closed,
+      avgMergeTimeHours: this.calculateAvgMergeTime(prs),
+      last12Months: this.buildMonthlyStats(prs),
+      issues: {
+        total:
+          graphqlData.user.contributionsCollection.issueContributions
+            .totalCount,
+        open: issueNodes.filter((n) => n.issue.state === "OPEN").length,
+        closed: issueNodes.filter((n) => n.issue.state === "CLOSED").length,
+      },
+    };
   }
 
-  private calculateAvgMergeTime(merged: PullRequest.PRItem[]): number | null {
-    const withMergeTime = merged.filter((pr) => pr.mergedAt);
+  private calculateAvgMergeTime(prs: PullRequest.PRItem[]): number | null {
+    const withMergeTime = prs.filter((pr) => pr.mergedAt);
     if (!withMergeTime.length) return null;
 
     const totalHours = withMergeTime.reduce((sum, pr) => {
@@ -126,7 +193,7 @@ export class PullRequestService extends BaseService implements IPullRequest {
 
     for (let i = 11; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const month = date.toISOString().slice(0, 7); // 'YYYY-MM'
+      const month = date.toISOString().slice(0, 7);
       months.push({ month, opened: 0, merged: 0 });
     }
 
