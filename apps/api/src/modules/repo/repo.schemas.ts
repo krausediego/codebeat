@@ -7,7 +7,9 @@ type GithubRepos =
 
 export const repoSchema = defineSchema({
   response: {
-    200: z.custom<GithubRepos>(),
+    200: z.object({
+      data: z.custom<GithubRepos>(),
+    }),
   },
   detail: {
     tags: ["Repos"],

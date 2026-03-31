@@ -62,6 +62,10 @@ export class GithubService extends BaseService implements IGithub {
     const cached = await this.cache.get(key, this.traceId);
     if (cached) {
       this.log("info", `Cache hit: ${endpoint}`, { userId });
+      this.log("info", "Cache type check", {
+        isArray: Array.isArray(cached),
+        type: typeof cached,
+      });
       return cached as any;
     }
 

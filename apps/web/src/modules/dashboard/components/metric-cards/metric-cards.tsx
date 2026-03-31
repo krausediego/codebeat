@@ -1,5 +1,10 @@
 import { useIsFetching } from "@tanstack/react-query"
-import { useQueryCommits, useQueryPullRequests } from "../../hooks"
+import {
+  useQueryCommits,
+  useQueryLanguages,
+  useQueryPullRequests,
+  useQueryRepos,
+} from "../../hooks"
 import {
   CustomMetricCardSkeleton,
   CustomMetricCardContent,
@@ -14,10 +19,15 @@ import { BarChart, Bar, ResponsiveContainer, Tooltip } from "recharts"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import { useMemo } from "react"
+import { HeatmapCalendar } from "@/components/ui/heatmap"
+import { Progress } from "@/components/ui/progress"
+import { getLanguageColor } from "@/lib/languages"
 
 export function MetricCards() {
   const { data: commits } = useQueryCommits()
   const { data: pullRequests } = useQueryPullRequests()
+  const { data: languages } = useQueryLanguages()
+  const { data: repos } = useQueryRepos()
 
   const CustomBar = (props: any) => {
     const { x, y, width, height } = props
@@ -65,6 +75,21 @@ export function MetricCards() {
         ),
     }) > 0
 
+  const topRepos = useMemo(() => {
+    if (!repos?.data.length) return []
+
+    return [...(repos.data ?? [])]
+      .filter((r) => !r.fork) // ignora forks
+      .sort(
+        (a, b) =>
+          new Date(b?.pushed_at ?? "").getTime() -
+          new Date(a?.pushed_at ?? "").getTime()
+      )
+      .slice(0, 6)
+  }, [repos])
+
+  console.log("data", Array.isArray(repos?.data))
+
   if (isFetching) {
     return (
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
@@ -95,17 +120,19 @@ export function MetricCards() {
             </span>
           </h1>
         </div>
-        <Separator />
 
-        <div className="space-y-4">
-          <p className="text-xs font-light text-muted-foreground uppercase">
-            TOTAL ÚLTIMO ANO
-          </p>
-          <h1 className="text-5xl leading-none font-medium text-card-foreground">
-            {commits?.totalThisYear}
-          </h1>
+        <div className="space-y-24">
+          <div className="space-y-4">
+            <Separator />
+            <p className="text-xs font-light text-muted-foreground uppercase">
+              TOTAL ÚLTIMO ANO
+            </p>
+            <h1 className="text-5xl leading-none font-medium text-card-foreground">
+              {commits?.totalThisYear}
+            </h1>
+          </div>
 
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={data}
               margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
@@ -145,7 +172,7 @@ export function MetricCards() {
         </h1>
         <h5 className="text-xs leading-none font-light text-card-foreground">
           RECORDE: {commits?.longestStreak}{" "}
-          {commits!.longestStreak < 1 ? "DIA" : "DIAS"}
+          {/* {commits?.longestStreak < 1 ? "DIA" : "DIAS"} */}
         </h5>
       </div>
 
@@ -159,6 +186,70 @@ export function MetricCards() {
         <h5 className="text-xs leading-none font-light text-card-foreground">
           {pullRequests?.total} TOTAL · {pullRequests?.open} ABERTA
         </h5>
+      </div>
+
+      <HeatmapCalendar
+        className="col-span-2"
+        title="Atividade de commits"
+        data={
+          commits?.heatmap.map((data) => {
+            return {
+              date: data.date,
+              value: data.count,
+            }
+          }) ?? []
+        }
+        axisLabels
+      />
+
+      <div className="space-y-6 rounded-md bg-card p-8">
+        <p className="text-xs font-light text-muted-foreground uppercase">
+          LINGUAGENS
+        </p>
+        <div className="space-y-8">
+          {languages?.languages.slice(0, 6).map((language) => {
+            return (
+              <div className="flex items-center gap-2">
+                <p className="w-24 shrink-0 text-xs">{language.name}</p>
+                <Progress
+                  value={language.percentage}
+                  style={{ backgroundColor: getLanguageColor(language.name) }}
+                />
+                <p className="w-8 shrink-0 text-right text-xs">
+                  {language.percentage}%
+                </p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-4 rounded-md bg-card p-8">
+        <p className="text-xs font-light text-muted-foreground uppercase">
+          ISSUES
+        </p>
+        <h1 className="text-5xl leading-none font-medium text-amber-400">
+          {pullRequests?.issues.total}
+        </h1>
+        <h5 className="text-xs leading-none font-light text-card-foreground">
+          {pullRequests?.issues.closed} FECHADA · {pullRequests?.issues.open}{" "}
+          ABERTA
+        </h5>
+      </div>
+
+      <div className="space-y-4 rounded-md bg-card p-8">
+        <p className="text-xs font-light text-muted-foreground uppercase">
+          TOP REPOSITÓRIOS
+        </p>
+        <div className="divide-y">
+          {topRepos?.map((repo) => {
+            return (
+              <div className="px-6 py-4 transition-colors hover:border-l-2 hover:border-l-primary hover:bg-primary/40">
+                <h3 className="text-sm font-semibold uppercase">{repo.name}</h3>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </>
   )

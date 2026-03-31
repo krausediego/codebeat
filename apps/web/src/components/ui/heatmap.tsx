@@ -165,7 +165,7 @@ export function HeatmapCalendar({
   }, [])
 
   const levels = levelClassNames ?? [
-    "bg-muted",
+    "bg-secondary",
     "bg-primary/20",
     "bg-primary/35",
     "bg-primary/55",
@@ -316,7 +316,7 @@ export function HeatmapCalendar({
           return (
             <div
               key={i}
-              className={cn("rounded-[3px]", !palette?.length && cls)}
+              className={cn("rounded-none", !palette?.length && cls)}
               style={{
                 width: swatchSize,
                 height: swatchSize,
@@ -357,12 +357,14 @@ export function HeatmapCalendar({
     gridWidth > 0 && weeks > 1 ? gridWidth / (weeks - 1) : colStep
 
   return (
-    <Card className={cn(className)}>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">{title}</CardTitle>
+    <Card className={cn(className, "p-8")}>
+      <CardHeader className="px-0 pb-3">
+        <CardTitle className="text-xs font-light text-muted-foreground uppercase">
+          {title}
+        </CardTitle>
       </CardHeader>
 
-      <CardContent ref={containerRef}>
+      <CardContent ref={containerRef} className="px-0">
         <TooltipProvider delayDuration={80}>
           <div
             className={cn(
@@ -445,7 +447,7 @@ export function HeatmapCalendar({
                                   !cell.disabled && onCellClick?.(cell)
                                 }
                                 className={cn(
-                                  "rounded-[3px] ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                                  "rounded-none ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                                   !palette?.length && cls,
                                   cell.disabled &&
                                     "pointer-events-none cursor-default opacity-30"

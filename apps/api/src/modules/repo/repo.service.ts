@@ -23,6 +23,6 @@ export class RepoService extends BaseService implements IRepo {
       traceId: this.traceId,
     });
 
-    return repos;
+    return { data: repos };
   }
 }
