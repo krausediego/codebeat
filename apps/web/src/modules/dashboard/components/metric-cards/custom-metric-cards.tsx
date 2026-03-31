@@ -13,7 +13,7 @@ const CustomMetricCardRoot = ({
 }: React.ComponentProps<"div">) => {
   return (
     <div
-      className={cn("space-y-2 rounded-md bg-card p-8 shadow-sm", className)}
+      className={cn("space-y-4 rounded-md bg-card p-8", className)}
       {...props}
     />
   )
@@ -26,7 +26,7 @@ const CustomMetricCardTitle = ({
   return (
     <p
       className={cn(
-        "text-sm font-light tracking-wider text-muted-foreground uppercase",
+        "text-xs font-light text-muted-foreground uppercase",
         className
       )}
       {...props}
@@ -48,7 +48,22 @@ const CustomMetricCardValue = ({
   return (
     <h1
       className={cn(
-        "text-xl leading-none font-medium text-card-foreground",
+        "text-5xl leading-none font-medium text-card-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+const CustomMetricCardValueDescription = ({
+  className,
+  ...props
+}: React.ComponentProps<"h6">) => {
+  return (
+    <span
+      className={cn(
+        "text-sm leading-none font-medium text-card-foreground uppercase",
         className
       )}
       {...props}
@@ -57,10 +72,35 @@ const CustomMetricCardValue = ({
 }
 
 const CustomMetricCardPercent = ({
+  positive = true,
   className,
   ...props
-}: React.ComponentProps<"p">) => {
-  return <p className={cn("text-xs text-emerald-500", className)} {...props} />
+}: React.ComponentProps<"p"> & { positive?: boolean }) => {
+  return (
+    <p
+      className={cn(
+        "text-xs uppercase",
+        positive ? "text-emerald-500" : "text-destructive",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+const CustomMetricDescription = ({
+  className,
+  ...props
+}: React.ComponentProps<"h5">) => {
+  return (
+    <h5
+      className={cn(
+        "text-sm leading-none font-medium text-card-foreground uppercase",
+        className
+      )}
+      {...props}
+    />
+  )
 }
 
 export {
@@ -68,5 +108,7 @@ export {
   CustomMetricCardTitle,
   CustomMetricCardContent,
   CustomMetricCardValue,
+  CustomMetricCardValueDescription,
   CustomMetricCardPercent,
+  CustomMetricDescription,
 }

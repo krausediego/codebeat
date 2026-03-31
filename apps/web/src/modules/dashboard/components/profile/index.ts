@@ -1,6 +1,0 @@
-export * from "./custom-badge"
-export * from "./personal-info-skeleton"
-export * from "./personal-info"
-export * from "./profile-badges-skeleton"
-export * from "./profile-badges"
-export * from "./profile"

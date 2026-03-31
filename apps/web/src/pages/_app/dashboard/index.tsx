@@ -1,7 +1,7 @@
+import { ContentLayout } from "@/components/admin-layout/content-layout"
 import { HeatmapCalendar } from "@/components/ui/heatmap"
 import { Separator } from "@/components/ui/separator"
-import { MetricCards } from "@/modules/dashboard/components/metric-cards"
-import { Profile } from "@/modules/dashboard/components/profile"
+import { MetricCards } from "@/modules/dashboard/components"
 import { useQueryCommits } from "@/modules/dashboard/hooks"
 import { createFileRoute } from "@tanstack/react-router"
 
@@ -13,11 +13,10 @@ function RouteComponent() {
   const { data: commits } = useQueryCommits()
 
   return (
-    <div className="container m-auto space-y-8 py-12">
-      <Profile />
-      <Separator />
+    <ContentLayout title="terminal / overview">
       <MetricCards />
       <HeatmapCalendar
+        className="col-span-2"
         title="Atividade de commits"
         data={
           commits?.heatmap.map((data) => {
@@ -29,6 +28,6 @@ function RouteComponent() {
         }
         axisLabels
       />
-    </div>
+    </ContentLayout>
   )
 }

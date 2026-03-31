@@ -83,7 +83,34 @@ export class CommitService extends BaseService implements ICommit {
       .filter((d) => d.date >= firstDayOfYear)
       .reduce((sum, d) => sum + d.count, 0);
 
-    return { commits30d, totalThisYear, currentStreak, longestStreak, heatmap };
+    const sixtyDaysAgo = new Date(now);
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+    const commits30dPrevious = heatmap
+      .filter((d) => {
+        const date = d.date;
+        return (
+          date >= sixtyDaysAgo.toISOString().split("T")[0] &&
+          date < thirtyDaysAgo.toISOString().split("T")[0]
+        );
+      })
+      .reduce((sum, d) => sum + d.count, 0);
+
+    const deltaCommits30d =
+      commits30dPrevious === 0
+        ? null
+        : Math.round(
+            ((commits30d - commits30dPrevious) / commits30dPrevious) * 100,
+          );
+
+    return {
+      commits30d,
+      deltaCommits30d,
+      totalThisYear,
+      currentStreak,
+      longestStreak,
+      heatmap,
+    };
   }
 
   private calculateStreaks({

@@ -6,6 +6,7 @@ export const commitSchema = defineSchema({
   response: {
     200: z.object({
       commits30d: z.number(),
+      deltaCommits30d: z.number().nullable(),
       totalThisYear: z.number(),
       currentStreak: z.number(),
       longestStreak: z.number(),
