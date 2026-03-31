@@ -60,7 +60,7 @@ export function ContentLayout({
 
       <div
         className={cn(
-          "grid min-h-[calc(100vh-64px)] grid-cols-3 grid-rows-3 divide-x divide-y",
+          "grid h-[calc(100vh-64px)] grid-cols-3 grid-rows-3 divide-x divide-y",
           className
         )}
         {...props}
