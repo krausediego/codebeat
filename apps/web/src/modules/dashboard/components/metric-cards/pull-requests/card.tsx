@@ -1,4 +1,4 @@
-import { useQueryPullRequests } from "../../hooks"
+import { useQueryPullRequests } from "@/modules/dashboard/hooks"
 
 export function PullRequestsCard() {
   const { data: pullRequests } = useQueryPullRequests()

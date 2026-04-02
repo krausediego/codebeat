@@ -11,6 +11,10 @@
 import { Route as rootRouteImport } from './pages/__root'
 import { Route as AppLayoutRouteImport } from './pages/_app/layout'
 import { Route as IndexRouteImport } from './pages/index'
+import { Route as AppSettingsIndexRouteImport } from './pages/_app/settings/index'
+import { Route as AppRepositoriesIndexRouteImport } from './pages/_app/repositories/index'
+import { Route as AppPipelinesIndexRouteImport } from './pages/_app/pipelines/index'
+import { Route as AppNetworkIndexRouteImport } from './pages/_app/network/index'
 import { Route as AppDashboardIndexRouteImport } from './pages/_app/dashboard/index'
 
 const AppLayoutRoute = AppLayoutRouteImport.update({
@@ -22,6 +26,26 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppSettingsIndexRoute = AppSettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => AppLayoutRoute,
+} as any)
+const AppRepositoriesIndexRoute = AppRepositoriesIndexRouteImport.update({
+  id: '/repositories/',
+  path: '/repositories/',
+  getParentRoute: () => AppLayoutRoute,
+} as any)
+const AppPipelinesIndexRoute = AppPipelinesIndexRouteImport.update({
+  id: '/pipelines/',
+  path: '/pipelines/',
+  getParentRoute: () => AppLayoutRoute,
+} as any)
+const AppNetworkIndexRoute = AppNetworkIndexRouteImport.update({
+  id: '/network/',
+  path: '/network/',
+  getParentRoute: () => AppLayoutRoute,
+} as any)
 const AppDashboardIndexRoute = AppDashboardIndexRouteImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
@@ -31,23 +55,55 @@ const AppDashboardIndexRoute = AppDashboardIndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard/': typeof AppDashboardIndexRoute
+  '/network/': typeof AppNetworkIndexRoute
+  '/pipelines/': typeof AppPipelinesIndexRoute
+  '/repositories/': typeof AppRepositoriesIndexRoute
+  '/settings/': typeof AppSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof AppDashboardIndexRoute
+  '/network': typeof AppNetworkIndexRoute
+  '/pipelines': typeof AppPipelinesIndexRoute
+  '/repositories': typeof AppRepositoriesIndexRoute
+  '/settings': typeof AppSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppLayoutRouteWithChildren
   '/_app/dashboard/': typeof AppDashboardIndexRoute
+  '/_app/network/': typeof AppNetworkIndexRoute
+  '/_app/pipelines/': typeof AppPipelinesIndexRoute
+  '/_app/repositories/': typeof AppRepositoriesIndexRoute
+  '/_app/settings/': typeof AppSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard/'
+  fullPaths:
+    | '/'
+    | '/dashboard/'
+    | '/network/'
+    | '/pipelines/'
+    | '/repositories/'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard'
-  id: '__root__' | '/' | '/_app' | '/_app/dashboard/'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/network'
+    | '/pipelines'
+    | '/repositories'
+    | '/settings'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/_app/dashboard/'
+    | '/_app/network/'
+    | '/_app/pipelines/'
+    | '/_app/repositories/'
+    | '/_app/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -71,6 +127,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/settings/': {
+      id: '/_app/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AppSettingsIndexRouteImport
+      parentRoute: typeof AppLayoutRoute
+    }
+    '/_app/repositories/': {
+      id: '/_app/repositories/'
+      path: '/repositories'
+      fullPath: '/repositories/'
+      preLoaderRoute: typeof AppRepositoriesIndexRouteImport
+      parentRoute: typeof AppLayoutRoute
+    }
+    '/_app/pipelines/': {
+      id: '/_app/pipelines/'
+      path: '/pipelines'
+      fullPath: '/pipelines/'
+      preLoaderRoute: typeof AppPipelinesIndexRouteImport
+      parentRoute: typeof AppLayoutRoute
+    }
+    '/_app/network/': {
+      id: '/_app/network/'
+      path: '/network'
+      fullPath: '/network/'
+      preLoaderRoute: typeof AppNetworkIndexRouteImport
+      parentRoute: typeof AppLayoutRoute
+    }
     '/_app/dashboard/': {
       id: '/_app/dashboard/'
       path: '/dashboard'
@@ -83,10 +167,18 @@ declare module '@tanstack/react-router' {
 
 interface AppLayoutRouteChildren {
   AppDashboardIndexRoute: typeof AppDashboardIndexRoute
+  AppNetworkIndexRoute: typeof AppNetworkIndexRoute
+  AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
+  AppRepositoriesIndexRoute: typeof AppRepositoriesIndexRoute
+  AppSettingsIndexRoute: typeof AppSettingsIndexRoute
 }
 
 const AppLayoutRouteChildren: AppLayoutRouteChildren = {
   AppDashboardIndexRoute: AppDashboardIndexRoute,
+  AppNetworkIndexRoute: AppNetworkIndexRoute,
+  AppPipelinesIndexRoute: AppPipelinesIndexRoute,
+  AppRepositoriesIndexRoute: AppRepositoriesIndexRoute,
+  AppSettingsIndexRoute: AppSettingsIndexRoute,
 }
 
 const AppLayoutRouteWithChildren = AppLayoutRoute._addFileChildren(

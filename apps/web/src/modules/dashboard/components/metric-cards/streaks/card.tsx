@@ -1,4 +1,4 @@
-import { useQueryCommits } from "../../hooks"
+import { useQueryCommits } from "@/modules/dashboard/hooks"
 
 export function StreakCard() {
   const { data: commits } = useQueryCommits()

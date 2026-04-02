@@ -28,23 +28,43 @@ export type HeatmapCell = {
 
 export type LegendConfig = {
   show?: boolean
+  /** Default: "Less" */
   lessText?: React.ReactNode
+  /** Default: "More" */
   moreText?: React.ReactNode
+  /** Default: true (shows the arrow) */
   showArrow?: boolean
+  /** Default: "right" */
   placement?: "right" | "bottom"
+  /** Default: "row" */
   direction?: "row" | "column"
+  /** Default: true */
   showText?: boolean
+  /** Default: uses cellSize */
   swatchSize?: number
+  /** Default: uses cellGap */
   swatchGap?: number
   className?: string
 }
 
 export type AxisLabelsConfig = {
+  /** Default: true */
   show?: boolean
+  /** Show weekday labels on left. Default: true */
   showWeekdays?: boolean
+  /** Show month labels on top. Default: true */
   showMonths?: boolean
+  /**
+   * Which weekday rows to label (0..6 in grid order top->bottom).
+   * Default: [1,3,5] => Mon/Wed/Fri when weekStartsOn=1 (nice uncluttered)
+   */
   weekdayIndices?: number[]
+  /** Month label format. Default: "short" */
   monthFormat?: "short" | "long" | "numeric"
+  /**
+   * Minimum spacing in weeks between month labels to avoid crowding.
+   * Default: 3
+   */
   minWeekSpacing?: number
   className?: string
 }
@@ -52,16 +72,35 @@ export type AxisLabelsConfig = {
 export type HeatmapCalendarProps = {
   title?: string
   data: HeatmapDatum[]
+  /** Number of days ending at endDate (default 365) */
   rangeDays?: number
   endDate?: Date
   weekStartsOn?: 0 | 1
+
+  /** Cell size in px (default 12) */
   cellSize?: number
+  /** Gap between cells in px (default 3) */
   cellGap?: number
+
+  /** Called when a cell is clicked */
   onCellClick?: (cell: HeatmapCell) => void
+
+  /** Tailwind class names for levels 0..N (used when palette is not provided) */
   levelClassNames?: string[]
+
+  /**
+   * Direct color palette for levels 0..N (e.g. ["#eee", "#bbf7d0", ...] or "hsl(var(--primary) / 0.35)").
+   * If provided, it overrides levelClassNames for cell and legend coloring.
+   */
   palette?: string[]
+
+  /** Configure legend, or set to false to hide */
   legend?: boolean | LegendConfig
+
+  /** Add axis labels (weekday + month) */
   axisLabels?: boolean | AxisLabelsConfig
+
+  /** Full custom legend render (overrides legend config UI) */
   renderLegend?: (args: {
     levelCount: number
     levelClassNames: string[]
@@ -69,9 +108,14 @@ export type HeatmapCalendarProps = {
     cellSize: number
     cellGap: number
   }) => React.ReactNode
+
+  /** Tooltip content override */
   renderTooltip?: (cell: HeatmapCell) => React.ReactNode
+
   className?: string
 }
+
+/* ---------------- utilities ---------------- */
 
 function startOfDay(d: Date) {
   const x = new Date(d)
@@ -86,6 +130,8 @@ function addDays(d: Date, days: number) {
 }
 
 function toKey(d: Date) {
+  // Using UTC ISO date key keeps things stable for demos.
+  // If you want strict local timezone day mapping, swap this to local YYYY-MM-DD generation.
   return d.toISOString().slice(0, 10)
 }
 
@@ -97,6 +143,7 @@ function startOfWeek(d: Date, weekStartsOn: 0 | 1) {
   return x
 }
 
+/** Default GitHub-ish buckets. */
 function getLevel(value: number) {
   if (value <= 0) return 0
   if (value <= 2) return 1
@@ -128,10 +175,15 @@ function formatMonth(d: Date, fmt: "short" | "long" | "numeric") {
 }
 
 function weekdayLabelForIndex(index: number, weekStartsOn: 0 | 1) {
+  // index is 0..6 in grid row order (top->bottom).
+  // actual weekday = weekStartsOn + index
   const actualDay = (weekStartsOn + index) % 7
+  // stable reference week (UTC)
   const base = new Date(Date.UTC(2024, 0, 7 + actualDay))
   return base.toLocaleDateString("pt-BR", { weekday: "short" }).toUpperCase()
 }
+
+/* ---------------- component ---------------- */
 
 export function HeatmapCalendar({
   title = "Activity",
@@ -140,7 +192,7 @@ export function HeatmapCalendar({
   endDate = new Date(),
   weekStartsOn = 1,
   cellSize = 12,
-  cellGap = 4,
+  cellGap = 3,
   onCellClick,
   levelClassNames,
   palette,
@@ -150,20 +202,7 @@ export function HeatmapCalendar({
   renderTooltip,
   className,
 }: HeatmapCalendarProps) {
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const [containerWidth, setContainerWidth] = React.useState<number>(0)
-
-  React.useEffect(() => {
-    if (!containerRef.current) return
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width)
-      }
-    })
-    ro.observe(containerRef.current)
-    return () => ro.disconnect()
-  }, [])
-
+  // Default classes are semantic => good in light/dark
   const levels = levelClassNames ?? [
     "bg-secondary",
     "bg-primary/20",
@@ -199,8 +238,9 @@ export function HeatmapCalendar({
     for (const item of data) {
       const d = typeof item.date === "string" ? new Date(item.date) : item.date
       const key = toKey(d)
+
       const prev = map.get(key)
-      const nextVal = (prev?.value ?? 0) + (item.value ?? 0)
+      const nextVal = (prev?.value ?? 0) + (item.value ?? 0) // sum merge
       map.set(key, { value: nextVal, meta: item.meta ?? prev?.meta })
     }
     return map
@@ -217,9 +257,11 @@ export function HeatmapCalendar({
       const date = addDays(firstWeek, w * 7 + d)
       const inRange = date >= start && date <= end
       const key = toKey(date)
+
       const v = inRange ? (valueMap.get(key)?.value ?? 0) : 0
       const meta = inRange ? valueMap.get(key)?.meta : undefined
       const lvl = inRange ? getLevel(v) : 0
+
       cells.push({
         date,
         key,
@@ -241,20 +283,6 @@ export function HeatmapCalendar({
     columns.push(cells.slice(i * 7, i * 7 + 7))
   }
 
-  // Calcula cellSize dinamico baseado na largura disponível
-  const weekdayLabelWidth = showAxis && showWeekdays ? 44 : 0
-  const legendWidth = (legendCfg.show ?? true) ? 140 : 0
-  const availableWidth = containerWidth - weekdayLabelWidth - legendWidth - 16 // 16 = gap
-  const dynamicCellSize =
-    containerWidth > 0 && weeks > 0
-      ? Math.max(
-          8,
-          Math.floor((availableWidth - cellGap * (weeks - 1)) / weeks)
-        )
-      : cellSize
-
-  const effectiveCellSize = containerWidth > 0 ? dynamicCellSize : cellSize
-
   const monthLabels = React.useMemo(() => {
     if (!showAxis || !showMonths)
       return [] as { colIndex: number; text: string }[]
@@ -265,9 +293,11 @@ export function HeatmapCalendar({
     for (let i = 0; i < columns.length; i++) {
       const col = columns[i]
       const firstInCol = col.find((c) => !c.disabled)?.date ?? col[0].date
+
       const prevCol = i > 0 ? columns[i - 1] : null
       const prevFirst =
         prevCol?.find((c) => !c.disabled)?.date ?? prevCol?.[0]?.date
+
       const monthChanged = !prevFirst || !sameMonth(firstInCol, prevFirst)
 
       if (monthChanged && i - lastLabeledWeek >= minWeekSpacing) {
@@ -279,14 +309,16 @@ export function HeatmapCalendar({
     return labels
   }, [columns, showAxis, showMonths, monthFormat, minWeekSpacing])
 
-  const showLegend = legendCfg.show ?? false
+  /* ---------------- legend ---------------- */
+
+  const showLegend = legendCfg.show ?? true
   const placement = legendCfg.placement ?? "right"
   const direction = legendCfg.direction ?? "row"
   const showText = legendCfg.showText ?? true
   const showArrow = legendCfg.showArrow ?? true
-  const lessText = legendCfg.lessText ?? "Menos"
-  const moreText = legendCfg.moreText ?? "Mais"
-  const swatchSize = legendCfg.swatchGap ?? effectiveCellSize
+  const lessText = legendCfg.lessText ?? "Less"
+  const moreText = legendCfg.moreText ?? "More"
+  const swatchSize = legendCfg.swatchSize ?? cellSize
   const swatchGap = legendCfg.swatchGap ?? cellGap
 
   const LegendUI = renderLegend ? (
@@ -294,16 +326,17 @@ export function HeatmapCalendar({
       levelCount,
       levelClassNames: levels,
       palette,
-      cellSize: effectiveCellSize,
+      cellSize,
       cellGap,
     })
   ) : !showLegend ? null : (
-    <div className={cn("shrink-0", legendCfg.className)}>
+    <div className={cn("min-w-35", legendCfg.className)}>
       {showText ? (
-        <div className="mb-2 text-xs whitespace-nowrap text-muted-foreground">
+        <div className="mb-2 text-xs text-muted-foreground">
           {lessText} {showArrow ? <span aria-hidden>→</span> : null} {moreText}
         </div>
       ) : null}
+
       <div
         className={cn(
           "flex items-center",
@@ -316,7 +349,7 @@ export function HeatmapCalendar({
           return (
             <div
               key={i}
-              className={cn("rounded-none", !palette?.length && cls)}
+              className={cn("rounded-[3px]", !palette?.length && cls)}
               style={{
                 width: swatchSize,
                 height: swatchSize,
@@ -330,10 +363,12 @@ export function HeatmapCalendar({
     </div>
   )
 
+  /* ---------------- tooltip ---------------- */
+
   const tooltipNode = (cell: HeatmapCell) => {
     if (renderTooltip) return renderTooltip(cell)
-    if (cell.disabled) return "Fora do intervalo"
-    const unit = cell.value === 1 ? "contribuição" : "contribuições"
+    if (cell.disabled) return "Outside range"
+    const unit = cell.value === 1 ? "event" : "events"
     return (
       <div className="text-sm">
         <div className="font-medium">
@@ -344,145 +379,128 @@ export function HeatmapCalendar({
     )
   }
 
-  const gridWidth =
-    containerWidth > 0
-      ? containerWidth -
-        (weekdayLabelWidth ? weekdayLabelWidth + 8 : 0) -
-        (showLegend ? legendWidth + 16 : 0)
-      : 0
-
-  const colStep = effectiveCellSize + cellGap
-
-  const realColStep =
-    gridWidth > 0 && weeks > 1 ? gridWidth / (weeks - 1) : colStep
+  const weekdayLabelWidth = showAxis && showWeekdays ? 44 : 0
 
   return (
-    <Card className={cn(className, "p-8")}>
-      <CardHeader className="px-0 pb-3">
-        <CardTitle className="text-xs font-light text-muted-foreground uppercase">
-          {title}
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent ref={containerRef} className="px-0">
-        <TooltipProvider delayDuration={80}>
-          <div
-            className={cn(
-              "flex gap-4",
-              placement === "bottom" ? "flex-col" : "flex-row items-start"
-            )}
-          >
-            {/* Calendar area — ocupa todo espaço disponível */}
-            <div className="min-w-0 flex-1">
-              {/* Month labels */}
-              {showAxis && showMonths ? (
-                <div
-                  className="flex items-end"
-                  style={{
-                    paddingLeft: weekdayLabelWidth ? weekdayLabelWidth + 8 : 0,
-                  }}
-                >
-                  <div className="relative w-full" style={{ height: 18 }}>
-                    {monthLabels.map((m) => (
-                      <div
-                        key={m.colIndex}
-                        className="absolute text-xs text-muted-foreground"
-                        style={{
-                          left: m.colIndex * realColStep,
-                          top: 0,
-                        }}
-                      >
-                        {m.text}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="flex">
-                {/* Weekday labels */}
-                {showAxis && showWeekdays ? (
+    <TooltipProvider delayDuration={80}>
+      <div
+        className={cn(
+          "flex gap-4 overflow-x-auto",
+          placement === "bottom" && "flex-col"
+        )}
+      >
+        {/* Labeled calendar area */}
+        <div className={cn("min-w-0", axisCfg.className)}>
+          {/* Month labels row */}
+          {showAxis && showMonths ? (
+            <div
+              className="flex items-end"
+              style={{ paddingLeft: weekdayLabelWidth }}
+            >
+              <div
+                className="relative"
+                style={{
+                  height: 18,
+                  width: columns.length * (cellSize + cellGap) - cellGap,
+                }}
+              >
+                {monthLabels.map((m) => (
                   <div
-                    className="mr-2 flex shrink-0 flex-col"
-                    style={{ gap: `${cellGap}px` }}
-                    aria-hidden="true"
+                    key={m.colIndex}
+                    className="absolute text-xs text-muted-foreground"
+                    style={{
+                      left: m.colIndex * (cellSize + cellGap),
+                      top: 0,
+                    }}
                   >
-                    {Array.from({ length: 7 }).map((_, rowIdx) => (
-                      <div
-                        key={rowIdx}
-                        className="flex items-center justify-end text-xs text-muted-foreground"
-                        style={{ width: 40, height: effectiveCellSize }}
-                      >
-                        {weekdayIndices.includes(rowIdx)
-                          ? weekdayLabelForIndex(rowIdx, weekStartsOn)
-                          : ""}
-                      </div>
-                    ))}
+                    {m.text}
                   </div>
-                ) : null}
-
-                {/* Grid — distribui colunas uniformemente */}
-                <div
-                  className="flex flex-1 justify-between"
-                  role="grid"
-                  aria-label="Heatmap calendario"
-                >
-                  {columns.map((col, i) => (
-                    <div
-                      key={i}
-                      className="flex flex-col"
-                      style={{ gap: `${cellGap}px` }}
-                      role="rowgroup"
-                    >
-                      {col.map((cell) => {
-                        const cls =
-                          levels[clampLevel(cell.level, levels.length)]
-                        return (
-                          <Tooltip key={`${cell.key}-${i}`}>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                disabled={cell.disabled}
-                                onClick={() =>
-                                  !cell.disabled && onCellClick?.(cell)
-                                }
-                                className={cn(
-                                  "rounded-none ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                  !palette?.length && cls,
-                                  cell.disabled &&
-                                    "pointer-events-none cursor-default opacity-30"
-                                )}
-                                style={{
-                                  width: effectiveCellSize,
-                                  height: effectiveCellSize,
-                                  ...(bgStyleForLevel(cell.level, palette) ??
-                                    {}),
-                                }}
-                                aria-label={
-                                  cell.disabled
-                                    ? "Fora do intervalo"
-                                    : `${cell.label}: ${cell.value}`
-                                }
-                                role="gridcell"
-                              />
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              {tooltipNode(cell)}
-                            </TooltipContent>
-                          </Tooltip>
-                        )
-                      })}
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
             </div>
+          ) : null}
 
-            {/* Legend */}
-            {LegendUI}
+          <div className="flex">
+            {/* Weekday labels column */}
+            {showAxis && showWeekdays ? (
+              <div
+                className="mr-2 flex flex-col"
+                style={{ gap: `${cellGap}px` }}
+                aria-hidden="true"
+              >
+                {Array.from({ length: 7 }).map((_, rowIdx) => (
+                  <div
+                    key={rowIdx}
+                    className="flex items-center justify-end text-xs text-muted-foreground"
+                    style={{ width: 40, height: cellSize }}
+                  >
+                    {weekdayIndices.includes(rowIdx)
+                      ? weekdayLabelForIndex(rowIdx, weekStartsOn)
+                      : ""}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {/* Heatmap grid */}
+            <div
+              className="flex"
+              style={{ gap: `${cellGap}px` }}
+              role="grid"
+              aria-label="Heatmap calendar"
+            >
+              {columns.map((col, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col"
+                  style={{ gap: `${cellGap}px` }}
+                  role="rowgroup"
+                >
+                  {col.map((cell) => {
+                    const cls = levels[clampLevel(cell.level, levels.length)]
+                    return (
+                      <Tooltip key={`${cell.key}-${i}`}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            disabled={cell.disabled}
+                            onClick={() =>
+                              !cell.disabled && onCellClick?.(cell)
+                            }
+                            className={cn(
+                              "rounded-[3px] ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                              !palette?.length && cls,
+                              cell.disabled &&
+                                "pointer-events-none cursor-default opacity-30"
+                            )}
+                            style={{
+                              width: cellSize,
+                              height: cellSize,
+                              ...(bgStyleForLevel(cell.level, palette) ?? {}),
+                            }}
+                            aria-label={
+                              cell.disabled
+                                ? "Outside range"
+                                : `${cell.label}: ${cell.value}`
+                            }
+                            role="gridcell"
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          {tooltipNode(cell)}
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
-        </TooltipProvider>
-      </CardContent>
-    </Card>
+        </div>
+
+        {/* Legend */}
+        {LegendUI}
+      </div>
+    </TooltipProvider>
   )
 }

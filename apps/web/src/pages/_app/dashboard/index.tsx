@@ -1,4 +1,4 @@
-import { ContentLayout } from "@/components/admin-layout/content-layout"
+import { ContentLayout } from "@/components/admin-layout"
 import { MetricCards } from "@/modules/dashboard/components"
 import { createFileRoute } from "@tanstack/react-router"
 

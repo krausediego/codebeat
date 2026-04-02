@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import { useQueryCommits } from "../../hooks"
+import { useQueryCommits } from "../../../hooks"
 import { Separator } from "@/components/ui/separator"
 import { Bar, BarChart, ResponsiveContainer, Tooltip } from "recharts"
 import { useMemo } from "react"

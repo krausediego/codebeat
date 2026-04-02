@@ -1,5 +1,5 @@
+import { useQueryRepos } from "@/modules/dashboard/hooks"
 import { useMemo } from "react"
-import { useQueryRepos } from "../../hooks"
 
 export function ReposCard() {
   const { data: repos } = useQueryRepos()
@@ -8,7 +8,7 @@ export function ReposCard() {
     if (!repos?.data.length) return []
 
     return [...(repos.data ?? [])]
-      .filter((r) => !r.fork) // ignora forks
+      .filter((r) => !r.fork)
       .sort(
         (a, b) =>
           new Date(b?.pushed_at ?? "").getTime() -

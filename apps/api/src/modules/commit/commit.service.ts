@@ -71,12 +71,12 @@ export class CommitService extends BaseService implements ICommit {
 
     const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const firstDayOfYear = new Date(now.getFullYear(), 0, 1)
-      .toISOString()
-      .split("T")[0];
+    const firstDayOfYear = this.toLocalDateStr(
+      new Date(now.getFullYear(), 0, 1),
+    );
 
     const commits30d = heatmap
-      .filter((d) => d.date >= thirtyDaysAgo.toISOString().split("T")[0])
+      .filter((d) => d.date >= this.toLocalDateStr(thirtyDaysAgo))
       .reduce((sum, d) => sum + d.count, 0);
 
     const totalThisYear = heatmap
@@ -90,8 +90,8 @@ export class CommitService extends BaseService implements ICommit {
       .filter((d) => {
         const date = d.date;
         return (
-          date >= sixtyDaysAgo.toISOString().split("T")[0] &&
-          date < thirtyDaysAgo.toISOString().split("T")[0]
+          date >= this.toLocalDateStr(sixtyDaysAgo) &&
+          date < this.toLocalDateStr(thirtyDaysAgo)
         );
       })
       .reduce((sum, d) => sum + d.count, 0);
@@ -123,14 +123,14 @@ export class CommitService extends BaseService implements ICommit {
     let longestStreak = 0;
     let tempStreak = 0;
 
-    const todayStr = today.toISOString().split("T")[0];
-    const startOffset = commitsByDay.has(todayStr) ? 0 : 1;
+    const todayStr = this.toLocalDateStr(today);
+    const startOffset = (commitsByDay.get(todayStr) ?? 0) > 0 ? 0 : 1;
 
     // streak atual — de hoje pra trás, para no primeiro dia sem commit
     for (let i = startOffset; i < 365; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0];
+      const dateStr = this.toLocalDateStr(date);
 
       if ((commitsByDay.get(dateStr) ?? 0) > 0) {
         currentStreak++;
@@ -143,7 +143,7 @@ export class CommitService extends BaseService implements ICommit {
     for (let i = 364; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0];
+      const dateStr = this.toLocalDateStr(date);
 
       if ((commitsByDay.get(dateStr) ?? 0) > 0) {
         tempStreak++;
@@ -154,5 +154,12 @@ export class CommitService extends BaseService implements ICommit {
     }
 
     return { currentStreak, longestStreak };
+  }
+
+  private toLocalDateStr(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 }

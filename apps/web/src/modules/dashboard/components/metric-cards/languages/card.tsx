@@ -1,6 +1,6 @@
 import { Progress } from "@/components/ui/progress"
 import { getLanguageColor } from "@/lib/languages"
-import { useQueryLanguages } from "../../hooks"
+import { useQueryLanguages } from "@/modules/dashboard/hooks"
 
 export function LanguagesCard() {
   const { data: languages } = useQueryLanguages()
