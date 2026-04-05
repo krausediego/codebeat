@@ -1,16 +1,11 @@
 import { useIsFetching } from "@tanstack/react-query"
 import { PullRequestsCard, PullRequestsCardSkeleton } from "."
+import { useQueryPullRequests } from "@/modules/dashboard/hooks"
 
 export function PullRequests() {
-  const isFetching =
-    useIsFetching({
-      predicate: (query) =>
-        ["pull-requests"].some((key) => query.queryKey.includes(key)),
-    }) > 0
+  const { data: pullRequests, isFetching } = useQueryPullRequests()
 
-  if (isFetching) {
-    return <PullRequestsCardSkeleton />
-  }
+  if (isFetching) return <PullRequestsCardSkeleton />
 
   return <PullRequestsCard />
 }

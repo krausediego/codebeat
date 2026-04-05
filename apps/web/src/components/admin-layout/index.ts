@@ -1,4 +1,5 @@
 export * from "./content-layout"
 export * from "./header"
+export * from "./menu-items"
 export * from "./sidebar"
 export * from "./user-management"

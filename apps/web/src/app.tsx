@@ -20,7 +20,9 @@ export function App() {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 1000 * 60 * 5,
+            staleTime: 1000 * 60 * 5, // 5 minutos — não refetch desnecessário
+            refetchOnWindowFocus: false, // não refetch ao focar a janela
+            refetchOnReconnect: false,
             retry: 1,
           },
         },

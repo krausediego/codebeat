@@ -1,4 +1,4 @@
-import { useQueryRepos } from "@/modules/dashboard/hooks"
+import { useQueryRepos } from "@/hooks"
 import { useMemo } from "react"
 
 export function ReposCard() {
