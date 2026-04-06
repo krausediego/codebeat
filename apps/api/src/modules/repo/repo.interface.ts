@@ -1,3 +1,4 @@
+import { RestEndpointMethodTypes } from "@octokit/rest";
 import type { RepoSchema } from ".";
 
 export interface IRepo {
@@ -12,4 +13,7 @@ export namespace Repo {
   };
 
   export type Response = RepoSchema.GetResponse;
+
+  export type GithubReposResponse =
+    RestEndpointMethodTypes["repos"]["listForAuthenticatedUser"]["response"]["data"];
 }

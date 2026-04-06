@@ -23,6 +23,9 @@ export class PullRequestService extends BaseService implements IPullRequest {
     const oneYearAgo = new Date(now);
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
+    const todayStr = this.toLocalDateStr(now);
+    const oneYearAgoStr = this.toLocalDateStr(oneYearAgo);
+
     type PRContributionsResponse = {
       user: {
         contributionsCollection: {
@@ -90,8 +93,8 @@ export class PullRequestService extends BaseService implements IPullRequest {
       await Promise.all([
         this.github.graphql<PRContributionsResponse>(userId, token, query, {
           username,
-          from: oneYearAgo.toISOString(),
-          to: now.toISOString(),
+          from: `${oneYearAgoStr}T00:00:00Z`,
+          to: `${todayStr}T00:00:00Z`,
         }),
         this.github.fetch({
           userId,
@@ -207,5 +210,12 @@ export class PullRequestService extends BaseService implements IPullRequest {
     }
 
     return months;
+  }
+
+  private toLocalDateStr(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 }

@@ -27,9 +27,9 @@ export function Header({ title }: HeaderProps) {
 
           <InputGroup className="hidden w-auto lg:flex">
             <InputGroupAddon>
-              <Search />
+              <Search className="text-primary" />
             </InputGroupAddon>
-            <InputGroupInput placeholder="SEARCH_SYSTEM..." />
+            <InputGroupInput placeholder="BUSCA_NO_SISTEMA..." />
           </InputGroup>
         </div>
 

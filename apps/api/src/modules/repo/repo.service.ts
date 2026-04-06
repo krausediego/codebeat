@@ -15,14 +15,35 @@ export class RepoService extends BaseService implements IRepo {
   async run({ userId, token }: Repo.Params): Promise<Repo.Response> {
     this.log("info", "Starting process list-repos");
 
-    const repos = await this.github.fetch({
-      userId,
-      token,
-      endpoint: "users/repos",
-      args: [{}],
-      traceId: this.traceId,
-    });
+    const allRepos: Repo.GithubReposResponse = [];
+    let page = 1;
 
-    return { data: repos };
+    while (true) {
+      const data = await this.github.fetch({
+        userId,
+        token,
+        endpoint: "users/repos",
+        args: [
+          {
+            per_page: 100,
+            page,
+            sort: "pushed",
+            direction: "desc",
+            affiliation: "owner,collaborator,organization_member",
+            visibility: "all",
+          },
+        ],
+        traceId: this.traceId,
+      });
+
+      allRepos.push(...data);
+
+      if (data.length < 100) break;
+      page++;
+    }
+
+    this.log("info", "All repos fetched", { userId, total: allRepos.length });
+
+    return { data: allRepos, total: allRepos.length };
   }
 }

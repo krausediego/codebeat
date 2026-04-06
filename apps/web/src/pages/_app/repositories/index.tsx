@@ -11,10 +11,10 @@ function RouteComponent() {
   return (
     <ContentLayout
       title="repositórios / overview"
-      className="lg:grid-cols-4 xl:grid-rows-5"
+      className="lg:grid-cols-4 xl:grid-rows-4"
     >
       <RepositoriesHeader />
-      <div className="col-span-4 row-span-4 grid grid-cols-3 divide-x divide-y">
+      <div className="col-span-4 row-span-3 grid grid-cols-3 grid-rows-3 divide-x divide-y">
         <CardRepository />
       </div>
     </ContentLayout>

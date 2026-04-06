@@ -1,14 +1,12 @@
 import z from "zod";
 import { defineSchema } from "@/infra";
-import { RestEndpointMethodTypes } from "@octokit/rest";
-
-type GithubRepos =
-  RestEndpointMethodTypes["repos"]["listForAuthenticatedUser"]["response"]["data"];
+import { Repo } from ".";
 
 export const repoSchema = defineSchema({
   response: {
     200: z.object({
-      data: z.custom<GithubRepos>(),
+      data: z.custom<Repo.GithubReposResponse>(),
+      total: z.number(),
     }),
   },
   detail: {

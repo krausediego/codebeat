@@ -11,9 +11,10 @@ interface MenuItemsProps {
   icon: LucideIcon
   title: string
   href: string
+  comingSoon?: boolean
 }
 
-export const menuItems = [
+export const menuItems: MenuItemsProps[] = [
   {
     icon: TerminalSquare,
     title: "terminal",
@@ -28,11 +29,13 @@ export const menuItems = [
     icon: GitFork,
     title: "pipelines",
     href: "/pipelines",
+    comingSoon: true,
   },
   {
     icon: Network,
     title: "network",
     href: "/network",
+    comingSoon: true,
   },
   {
     icon: Settings,

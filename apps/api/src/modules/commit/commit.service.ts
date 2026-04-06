@@ -22,6 +22,8 @@ export class CommitService extends BaseService implements ICommit {
     const now = new Date();
     const oneYearAgo = new Date(now);
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const todayStr = this.toLocalDateStr(now);
+    const oneYearAgoStr = this.toLocalDateStr(oneYearAgo);
 
     const query = `
       query($username: String!, $from: DateTime!, $to: DateTime!) {
@@ -46,8 +48,8 @@ export class CommitService extends BaseService implements ICommit {
       query,
       {
         username,
-        from: oneYearAgo.toISOString(),
-        to: now.toISOString(),
+        from: `${oneYearAgoStr}T00:00:00Z`,
+        to: `${todayStr}T23:59:59Z`,
       },
     );
 
