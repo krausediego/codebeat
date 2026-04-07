@@ -5,8 +5,18 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group"
 import { ChevronRight } from "lucide-react"
+import { useRepositories } from "@/modules/repositories/contexts"
+
+const BUTTONS_FILTERS = {
+  all: "Todos",
+  public: "Públicos",
+  private: "Privados",
+  forked: "Forked",
+}
 
 export function RepositoriesHeader() {
+  const { filters, setFilters, search, setSearch } = useRepositories()
+
   return (
     <div className="col-span-4 flex flex-col justify-center bg-card p-8">
       <div className="mt-auto flex items-center justify-between">
@@ -19,26 +29,32 @@ export function RepositoriesHeader() {
           </h1>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-3">
           <InputGroup>
             <InputGroupAddon>
               <ChevronRight className="text-primary" />
             </InputGroupAddon>
-            <InputGroupInput placeholder="BUSCAR_REPOSITÓRIOS..." />
+            <InputGroupInput
+              placeholder="BUSCAR_REPOSITÓRIOS..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="uppercase"
+            />
           </InputGroup>
           <div className="flex gap-2">
-            <Button variant="outline" className="uppercase">
-              Todos
-            </Button>
-            <Button variant="outline" className="uppercase">
-              Publicos
-            </Button>
-            <Button variant="outline" className="uppercase">
-              Privados
-            </Button>
-            <Button variant="outline" className="uppercase">
-              Forked
-            </Button>
+            {Object.entries(BUTTONS_FILTERS).map(([key, value]) => {
+              return (
+                <Button
+                  variant={filters === key ? "default" : "outline"}
+                  onClick={() =>
+                    setFilters(key as keyof typeof BUTTONS_FILTERS)
+                  }
+                  className="uppercase"
+                >
+                  {value}
+                </Button>
+              )
+            })}
           </div>
         </div>
       </div>

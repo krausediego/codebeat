@@ -1,10 +1,11 @@
-import { usePagination, useQueryRepos } from "@/hooks"
+import { usePagination, usePerPage, useQueryRepos } from "@/hooks"
 import { CardRepositoryContent } from "."
+import { useRepositories } from "@/modules/repositories/contexts"
 
 export function CardRepository() {
-  const { data: repos } = useQueryRepos()
-
-  const { paginated } = usePagination({ data: repos?.data ?? [], perPage: 9 })
+  const {
+    pagination: { paginated },
+  } = useRepositories()
 
   return (
     <>

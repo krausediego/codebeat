@@ -5,7 +5,21 @@ interface PaginationProps<T> {
   perPage: number
 }
 
-export function usePagination<T>({ data, perPage = 8 }: PaginationProps<T>) {
+export interface PaginationResponse<T> {
+  paginated: T[]
+  page: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+  next: () => void
+  prev: () => void
+  goTo: (p: number) => void
+}
+
+export function usePagination<T>({
+  data,
+  perPage = 8,
+}: PaginationProps<T>): PaginationResponse<T> {
   const [page, setPage] = React.useState(1)
 
   const totalPages = Math.ceil(data.length / perPage)

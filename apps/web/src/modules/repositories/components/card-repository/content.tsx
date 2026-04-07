@@ -29,7 +29,7 @@ export function CardRepositoryContent({ data }: CardRepositoryContentProps) {
             {data.language ?? "N/A"}
           </h3>
           <div className="ml-auto flex items-center gap-1">
-            <Star className="size-3 text-muted-foreground" />
+            <Star className="size-3 fill-muted-foreground text-muted-foreground" />
             <p className="text-xs text-muted-foreground">
               {data.stargazers_count}
             </p>
