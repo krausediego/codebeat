@@ -14,6 +14,7 @@ type RepositoriesProviderProps = {
 }
 
 type RepositoriesProviderState<T> = {
+  totalRepos: number
   filters: Filters
   setFilters: (filter: Filters) => void
   pagination: PaginationResponse<T>
@@ -26,8 +27,8 @@ const RepositoriesProviderContext = React.createContext<
 >(undefined)
 
 export function RepositoriesProvider({ children }: RepositoriesProviderProps) {
-  const [filters, setFilters] = React.useState<Filters>("all")
-  const [search, setSearch] = React.useState("")
+  const [filters, setFiltersState] = React.useState<Filters>("all")
+  const [search, setSearchState] = React.useState("")
   const { data: repos } = useQueryRepos()
   const perPage = usePerPage({ default: 6, "2xl": 9 })
 
@@ -56,19 +57,24 @@ export function RepositoriesProvider({ children }: RepositoriesProviderProps) {
 
   const pagination = usePagination({ data: filteredRepos, perPage })
 
-  React.useEffect(() => {
+  const setFilters = (filter: Filters) => {
+    setFiltersState(filter)
     pagination.goTo(1)
-  }, [filters, search])
+  }
 
-  const value = React.useMemo(() => {
-    return {
-      filters,
-      setFilters,
-      pagination,
-      search,
-      setSearch,
-    }
-  }, [filters, pagination, search, setSearch])
+  const setSearch = (value: string) => {
+    setSearchState(value)
+    pagination.goTo(1)
+  }
+
+  const value = {
+    totalRepos: repos?.total as number,
+    filters,
+    setFilters,
+    pagination,
+    search,
+    setSearch,
+  }
 
   return (
     <RepositoriesProviderContext.Provider value={value}>

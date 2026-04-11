@@ -13,7 +13,7 @@ export function ContentLayout({
 
       <div
         className={cn(
-          "flex h-[calc(100vh-64px)] flex-col divide-x divide-y lg:grid lg:grid-cols-3 xl:grid-rows-3",
+          "flex h-[calc(100vh-64px)] w-full flex-col divide-x divide-y lg:grid lg:grid-cols-3 xl:grid-rows-3",
           className
         )}
         {...props}

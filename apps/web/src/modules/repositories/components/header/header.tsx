@@ -4,7 +4,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group"
-import { ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useRepositories } from "@/modules/repositories/contexts"
 
 const BUTTONS_FILTERS = {
@@ -15,14 +15,15 @@ const BUTTONS_FILTERS = {
 }
 
 export function RepositoriesHeader() {
-  const { filters, setFilters, search, setSearch } = useRepositories()
+  const { filters, setFilters, search, setSearch, pagination, totalRepos } =
+    useRepositories()
 
   return (
-    <div className="col-span-4 flex flex-col justify-center bg-card p-8">
-      <div className="mt-auto flex items-center justify-between">
+    <div className="col-span-4 flex flex-col justify-center gap-4 bg-card p-8">
+      <div className="mt-auto flex flex-col items-center justify-between gap-4 lg:flex-row">
         <div>
           <p className="text-xs font-light text-muted-foreground uppercase">
-            REPOSITÓRIOS / 42 TOTAL
+            REPOSITÓRIOS / {totalRepos} TOTAL
           </p>
           <h1 className="text-4xl leading-none font-medium text-card-foreground">
             Source Management
@@ -59,9 +60,22 @@ export function RepositoriesHeader() {
         </div>
       </div>
 
-      <div className="mt-auto ml-auto space-x-2">
-        <Button>Anterior</Button>
-        <Button>Próxima</Button>
+      <div className="mt-auto ml-auto flex items-center space-x-2">
+        <Button
+          variant="secondary"
+          disabled={!pagination.hasPrev}
+          onClick={pagination.prev}
+        >
+          <ChevronLeft />
+        </Button>
+        <p>Página: {pagination.page}</p>
+        <Button
+          variant="secondary"
+          disabled={!pagination.hasNext}
+          onClick={pagination.next}
+        >
+          <ChevronRight />
+        </Button>
       </div>
     </div>
   )
