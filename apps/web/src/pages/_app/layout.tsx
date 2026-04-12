@@ -1,4 +1,3 @@
-import { Header } from "@/components/admin-layout/content-layout"
 import { Sidebar } from "@/components/admin-layout/sidebar"
 import { auth } from "@/lib/auth"
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
